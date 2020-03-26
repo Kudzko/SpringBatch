@@ -16,14 +16,20 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
 
 @Configuration
 @EnableBatchProcessing
+@PropertySource("classpath:application.properties")
 public class BatchConfiguration {
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
@@ -31,14 +37,37 @@ public class BatchConfiguration {
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
 
-   // For starters, the @EnableBatchProcessing annotation adds many critical beans that support jobs
+//    @Value("${db.driver}")
+//    private String driver;
+//    @Value("${db.url}")
+//    private String url;
+//    @Value("${db.user}")
+//    private String user;
+//    @Value("${db.password}")
+//    private String password;
+
+
+    // For starters, the @EnableBatchProcessing annotation adds many critical beans that support jobs
     // and save you a lot of leg work
+
+    //+++++++++++++++ database connection
+
+//    @Bean
+//    public DriverManagerDataSource taDataSource() {
+//        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+//        dataSource.setDriverClassName(driver);
+//        dataSource.setUrl(url);
+//        dataSource.setUsername(user);
+//        dataSource.setPassword(password);
+//        return dataSource;
+//    }
+    //--------- database connection
 
     @Bean
     public FlatFileItemReader<User> reader() {
         return new FlatFileItemReaderBuilder<User>()
                 .name("personItemReader")
-                .resource(new ClassPathResource("travel_agency_user.csv"))
+                .resource(new ClassPathResource("sample-data/travel_agency_user.csv"))
                 .delimited()
                 .names(new String[]{"name", "surname", "nickName"})
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<User>() {{
@@ -56,7 +85,7 @@ public class BatchConfiguration {
     public JdbcBatchItemWriter<User> writer(DataSource dataSource) {
         return new JdbcBatchItemWriterBuilder<User>()
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO user (name, surname, nickname) VALUES (:name, :surname)")
+                .sql("INSERT INTO user (name, surname, nickName) VALUES (:name, :surname, :nickName)")
                 .dataSource(dataSource)
                 .build();
     }
@@ -89,7 +118,7 @@ public class BatchConfiguration {
     @Bean
     public Step step1(JdbcBatchItemWriter<User> writer) {
         return stepBuilderFactory.get("step1")
-                .<User, User> chunk(10)
+                .<User, User>chunk(10)
                 .reader(reader())
                 .processor(processor())
                 .writer(writer)

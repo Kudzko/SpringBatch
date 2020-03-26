@@ -15,6 +15,6 @@ public class UserItemProcessor implements ItemProcessor <User, User> {
 
         log.info("Converting " + user + " into " + transformedUser);
 
-        return null;
+        return transformedUser;
     }
 }
