@@ -1,6 +1,6 @@
 DROP TABLE user IF EXISTS;
 
-CREATE TABLE user2  (
+CREATE TABLE user  (
     id BIGINT IDENTITY NOT NULL PRIMARY KEY,
     name VARCHAR(20),
     surname VARCHAR(20),

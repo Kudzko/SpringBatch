@@ -9,6 +9,9 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
@@ -68,7 +71,7 @@ public class BatchConfiguration {
                 .name("personItemReader")
                 .resource(new ClassPathResource("sample-data/travel_agency_user.csv"))
                 .delimited()
-                .names(new String[]{"id","name", "surname", "nickName"})
+                .names(new String[]{"id", "name", "surname", "nickName"})
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<User>() {{
                     setTargetType(User.class);
                 }})
