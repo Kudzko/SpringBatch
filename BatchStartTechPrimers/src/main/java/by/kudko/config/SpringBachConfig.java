@@ -127,13 +127,13 @@ public class SpringBachConfig {
     }
 
     @Bean
-    public Step step2(StepBuilderFactory stepBuilderFactory, ItemReader<Hotel> secondItemReader,
+    public Step step2(StepBuilderFactory stepBuilderFactory,@Qualifier("secondItemReader") ItemReader<Hotel> itemReader,
                       ItemWriter<Hotel> itemWriter) {
         log.info("step2");
 
         return stepBuilderFactory.get("ETL-load-file-step2")
                 .<Hotel, Hotel>chunk(chunk)
-                .reader(secondItemReader)
+                .reader(itemReader)
                 .writer(itemWriter)
                 .build();
 
