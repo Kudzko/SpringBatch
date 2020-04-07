@@ -1,6 +1,8 @@
 package by.kudko.config;
 
+import by.kudko.model.Hotel;
 import by.kudko.model.User;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -15,13 +17,14 @@ import org.springframework.batch.item.file.LineMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.io.Resource;
 
+@Log4j2
 @Configuration
 @EnableBatchProcessing
 @PropertySource("classpath:application.properties")
@@ -41,11 +44,11 @@ public class SpringBachConfig {
     }
 
     @Bean
-    Job anotherJob(JobBuilderFactory jobBuilderFactory, Step step1, Step step2) {
+    Job anotherJob(JobBuilderFactory jobBuilderFactory, @Qualifier("step2") Step step2) {
+        log.info("anotherJob");
         return jobBuilderFactory.get("ETL-two-steps-job")
                 .incrementer(new RunIdIncrementer())
-                .flow(step1)
-                .next(step2)
+                .flow(step2)
                 .end()
                 .build();
     }
@@ -53,12 +56,24 @@ public class SpringBachConfig {
 
     @Bean
     public FlatFileItemReader<User> itemReader(@Value("${inputFile}") Resource resource) {
+        System.out.println(resource);
         FlatFileItemReader<User> flatFileItemReader = new FlatFileItemReader<>();
         flatFileItemReader.setResource(resource);
-        flatFileItemReader.setName("flat-item-reader");
+        flatFileItemReader.setName("flat-item-reader-user");
         flatFileItemReader.setLinesToSkip(1);
         flatFileItemReader.setLineMapper(lineMapper());
-//        flatFileItemReader.setStrict(false);
+
+        return flatFileItemReader;
+    }
+
+    @Bean
+    public FlatFileItemReader<Hotel> secondItemReader(@Value("${inputFileTwo}") Resource resource) {
+        System.out.println(resource);
+        FlatFileItemReader<Hotel> flatFileItemReader = new FlatFileItemReader<>();
+        flatFileItemReader.setResource(resource);
+        flatFileItemReader.setName("flat-item-reader-hotel");
+        flatFileItemReader.setLinesToSkip(1);
+        flatFileItemReader.setLineMapper(lineMapper2());
 
         return flatFileItemReader;
     }
@@ -81,6 +96,24 @@ public class SpringBachConfig {
         return defaultLineMapper;
     }
 
+    @Bean
+    public LineMapper<Hotel> lineMapper2() {
+        DefaultLineMapper<Hotel> defaultLineMapper = new DefaultLineMapper<>();
+        DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer();
+
+        lineTokenizer.setDelimiter(",");
+        lineTokenizer.setStrict(false);
+        lineTokenizer.setNames(new String[]{"id", "name", "stars"});
+
+        BeanWrapperFieldSetMapper<Hotel> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
+        fieldSetMapper.setTargetType(Hotel.class);
+
+        defaultLineMapper.setFieldSetMapper(fieldSetMapper);
+        defaultLineMapper.setLineTokenizer(lineTokenizer);
+        log.info("lineMapper2");
+        return defaultLineMapper;
+    }
+
     //+++ Steps
     @Bean
     public Step step1(StepBuilderFactory stepBuilderFactory, ItemReader<User> itemReader
@@ -94,14 +127,16 @@ public class SpringBachConfig {
     }
 
     @Bean
-    public Step step2(StepBuilderFactory stepBuilderFactory, ItemReader<User> itemReader
-            , ItemProcessor<User, User> itemProcessor, ItemWriter<User> itemWriter) {
+    public Step step2(StepBuilderFactory stepBuilderFactory, ItemReader<Hotel> secondItemReader,
+                      ItemWriter<Hotel> itemWriter) {
+        log.info("step2");
+
         return stepBuilderFactory.get("ETL-load-file-step2")
-                .<User, User>chunk(chunk)
-                .reader(itemReader)
-                .processor(itemProcessor)
+                .<Hotel, Hotel>chunk(chunk)
+                .reader(secondItemReader)
                 .writer(itemWriter)
                 .build();
+
     }
     //--- Steps
 }

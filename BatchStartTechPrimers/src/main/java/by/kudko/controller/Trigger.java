@@ -1,5 +1,6 @@
 package by.kudko.controller;
 
+import by.kudko.repository.HotelRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 @Log4j2
 @RestController
-@RequestMapping("/load")
+
 public class Trigger {
 
     @Autowired
@@ -28,13 +29,41 @@ public class Trigger {
     @Qualifier("simpleJob")
     private Job job;
 
-    @GetMapping
+    @Autowired
+    @Qualifier("anotherJob")
+    private Job anotherJob;
+
+    @Autowired
+    HotelRepository hotelRepository;
+
+    @GetMapping("/load")
     public BatchStatus load() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
         Map<String, JobParameter> maps = new HashMap<>();
         maps.put("time", new JobParameter(System.currentTimeMillis()));
         JobParameters parameters = new JobParameters(maps);
 
         JobExecution jobExecution = jobLauncher.run(job, parameters);
+
+        log.info("JobExecution: " + jobExecution.getStatus());
+
+        log.info("Batch is Running...");
+        while (jobExecution.isRunning()) {
+            log.info("...");
+        }
+        log.info("Batch is finished");
+        return jobExecution.getStatus();
+    }
+
+    @GetMapping("/genclass")
+    public BatchStatus getMessageFromGeneratedClass() throws JobParametersInvalidException, JobExecutionAlreadyRunningException, JobRestartException, JobInstanceAlreadyCompleteException {
+
+        System.out.println("Hotels: " + hotelRepository.findAll());
+
+        Map<String, JobParameter> maps = new HashMap<>();
+        maps.put("time", new JobParameter(System.currentTimeMillis()));
+        JobParameters parameters = new JobParameters(maps);
+
+        JobExecution jobExecution = jobLauncher.run(anotherJob, parameters);
 
         log.info("JobExecution: " + jobExecution.getStatus());
 
