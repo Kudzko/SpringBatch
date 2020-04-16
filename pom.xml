@@ -6,6 +6,8 @@
     <modules>
         <module>BatchStartTechPrimers</module>
         <module>baeldung</module>
+        <module>importer</module>
+        <module>executor</module>
     </modules>
 
     <parent>

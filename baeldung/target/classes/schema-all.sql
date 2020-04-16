@@ -1,8 +1,0 @@
-DROP TABLE user IF EXISTS;
-
-CREATE TABLE user  (
-    id BIGINT IDENTITY NOT NULL PRIMARY KEY,
-    name VARCHAR(20),
-    surname VARCHAR(20),
-    nickName VARCHAR(20)
-);

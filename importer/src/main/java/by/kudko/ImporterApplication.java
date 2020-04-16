@@ -7,11 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @Log4j2
 @SpringBootApplication
-public class SpringBatchApplication {
-
+public class ImporterApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringBatchApplication.class, args);
+        SpringApplication.run(ImporterApplication.class, args);
     }
 
 }
